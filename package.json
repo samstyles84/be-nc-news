@@ -6,7 +6,7 @@
   "scripts": {
     "setup-dbs": "psql -f ./db/setup.sql",
     "seed": "knex seed:run",
-    "test": "NODE_ENV=test && jest --watch",
+    "test": "NODE_ENV=test && npm run seed && jest --watch",
     "migrate-latest": "knex migrate:latest",
     "migrate-rollback": "knex migrate:rollback"
   },
@@ -22,10 +22,12 @@
   },
   "homepage": "https://github.com/northcoders/be-nc-news#readme",
   "dependencies": {
+    "express": "^4.17.1",
     "knex": "^0.21.2",
     "pg": "^8.3.0"
   },
   "devDependencies": {
-    "jest": "^26.2.2"
+    "jest": "^26.2.2",
+    "supertest": "^4.0.2"
   }
 }

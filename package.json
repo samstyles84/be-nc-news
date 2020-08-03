@@ -6,7 +6,9 @@
   "scripts": {
     "setup-dbs": "psql -f ./db/setup.sql",
     "seed": "knex seed:run",
-    "test": "jest --watch"
+    "test": "jest --watch",
+    "migrate-latest": "knex migrate:latest",
+    "migrate-rollback": "knex migrate:rollback"
   },
   "repository": {
     "type": "git",
@@ -19,6 +21,9 @@
     "url": "https://github.com/northcoders/be-nc-news/issues"
   },
   "homepage": "https://github.com/northcoders/be-nc-news#readme",
-  "dependencies": {},
+  "dependencies": {
+    "knex": "^0.21.2",
+    "pg": "^8.3.0"
+  },
   "devDependencies": {}
 }

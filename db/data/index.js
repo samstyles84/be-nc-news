@@ -5,6 +5,4 @@ const ENV = process.env.NODE_ENV || "development";
 if (ENV === "development") exportData = developmentdata;
 else exportData = testData;
 
-console.log(exportData);
-
 module.exports = exportData;

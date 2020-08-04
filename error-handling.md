@@ -72,10 +72,10 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 ### GET `/api/articles`
 
 - Bad queries:
-  - `sort_by` a column that doesn't exist SS: 400 - done
-  - `order` !== "asc" / "desc" SS: 400 - done
-  - `author` / `topic` that is not in the database SS: 400 - done (but currently combined with below)
-  - `author` / `topic` that exists but does not have any articles associated with it SS: 400 - done (as above)
+  - `sort_by` a column that doesn't exist [SS: 400 - done]
+  - `order` !== "asc" / "desc" [SS: 400 - done]
+  - `author` / `topic` that is not in the database [SS: 400 - done (but currently combined with below)]
+  - `author` / `topic` that exists but does not have any articles associated with it [SS: From speaking to Jim, this should be a 200- done]
 
 ### PATCH `/api/comments/:comment_id`
 

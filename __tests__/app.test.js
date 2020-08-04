@@ -2,7 +2,6 @@ const request = require("supertest");
 const app = require("../app");
 const testData = require("../db/data/test-data");
 const knex = require("../connection");
-const { forEach } = require("../db/data/test-data/comments");
 
 describe("app", () => {
   beforeEach(() => {
@@ -53,6 +52,8 @@ describe("app", () => {
             expect(user.avatar_url).toBe(testUser.avatar_url);
             expect(user.name).toBe(testUser.name);
           });
+
+        //Maybe not a great idea to require in the testData - someone reading the tests doesnt now what to expect.
       });
       test("GET: 404 - Username doesn't exist in the database", () => {
         const apiString = `/api/users/samstyles`;
@@ -65,7 +66,7 @@ describe("app", () => {
       });
     });
     describe("/articles", () => {
-      test("GET: 200 - responds with an array of article objects with correct keys", () => {
+      test("GET: 200 - responds with an array of article objects with correct properties", () => {
         return request(app)
           .get("/api/articles")
           .expect(200)
@@ -93,12 +94,20 @@ describe("app", () => {
             expect(articles).toBeSortedBy("created_at", { descending: true });
           });
       });
-      test("GET: 200 - comment_count is correct", () => {
+      test("GET: 200 - comment_count & other values is correct", () => {
         return request(app)
           .get("/api/articles")
           .expect(200)
           .then(({ body: { articles } }) => {
             expect(articles[0].comment_count).toBe(13);
+            expect(articles[0].article_id).toBe(1);
+            expect(articles[0].title).toBe(
+              "Living in the shadow of a great man"
+            );
+            expect(articles[0].votes).toBe(100);
+            expect(articles[0].topic).toBe("mitch");
+            expect(articles[0].author).toBe("butter_bridge");
+            expect(articles[0].created_at).toBe("2018-11-15T12:21:54.171Z");
           });
       });
       test("GET: 200 - array can be sorted by other columns and in ascending order", () => {
@@ -109,7 +118,7 @@ describe("app", () => {
             expect(articles).toBeSortedBy("votes", { descending: false });
           });
       });
-      test("GET: 200 - array can be filtered by author", () => {
+      test("GET: 200 - endpoint can be queried by author", () => {
         return request(app)
           .get("/api/articles?author=rogersop")
           .expect(200)
@@ -119,7 +128,7 @@ describe("app", () => {
             });
           });
       });
-      test("GET: 200 - array can be filtered by topic", () => {
+      test("GET: 200 - endpoint can be queried by topic", () => {
         return request(app)
           .get("/api/articles?topic=cats")
           .expect(200)
@@ -129,7 +138,7 @@ describe("app", () => {
             });
           });
       });
-      test("GET: 400 - sort_by column doesn't exist", () => {
+      test.only("GET: 400 - sort_by column doesn't exist", () => {
         return request(app)
           .get("/api/articles?sort_by=streetcred")
           .expect(400)
@@ -145,25 +154,60 @@ describe("app", () => {
             expect(msg).toBe("invalid sort order!!!");
           });
       });
-      test("GET: 400 - author/topic not in db", () => {
+      test("GET: 400 - topic not in db", () => {
+        return request(app)
+          .get("/api/articles?topic=samstyles")
+          .expect(400)
+          .then(({ body: { msg } }) => {
+            expect(msg).toBe("topic not found in db!!!");
+          });
+      });
+      test("GET: 400 - author not in db", () => {
         return request(app)
           .get("/api/articles?author=samstyles")
           .expect(400)
           .then(({ body: { msg } }) => {
-            expect(msg).toBe(
-              "author/topic not found in db, or no articles found!!!"
-            );
+            expect(msg).toBe("author not found in db!!!");
           });
       });
-      test("GET: 404 - author / topic exists but no articles associated", () => {
+      test("GET: 200 - author / topic exists but no articles associated", () => {
         return request(app)
           .get("/api/articles?topic=paper")
-          .expect(400)
-          .then(({ body: { msg } }) => {
-            expect(msg).toBe(
-              "author/topic not found in db, or no articles found!!!"
-            );
+          .expect(200)
+          .then(({ body: { articles } }) => {
+            expect(articles.length).toBe(0);
           });
+      });
+
+      describe("/articles/:article_id", () => {
+        test("GET: 200 - returns an article object with the correct properties", () => {
+          return request(app)
+            .get("/api/articles/1")
+            .expect(200)
+            .then(({ body: { article } }) => {
+              expect(article).toEqual(
+                expect.objectContaining({
+                  article_id: expect.any(Number),
+                  title: expect.any(String),
+                  body: expect.any(String),
+                  votes: expect.any(Number),
+                  topic: expect.any(String),
+                  author: expect.any(String),
+                  created_at: expect.any(String),
+                  comment_count: expect.any(Number),
+                })
+              );
+            });
+        });
+        test("GET: 200 - comment_count & article_id are correct", () => {
+          return request(app)
+            .get("/api/articles/1")
+            .expect(200)
+            .then(({ body: { article } }) => {
+              expect(article.comment_count).toBe(13);
+              expect(article.article_id).toBe(1);
+            });
+        });
       });
     });
   });

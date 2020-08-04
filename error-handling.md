@@ -5,7 +5,7 @@ This is an incomplete guide to the possible errors that may happen in your app. 
 Think about what could go wrong for each route, and the HTTP status code should be sent to the client in each case.
 For each thing that could go wrong, make a test with your expected status code and then make sure that possibility is handled.
 
-Bear in mind, handling bad inputs from clients doesn't necessarily have to lead to a 4** status code. Handling can include using default behaviours or even ignoring parts of the request.
+Bear in mind, handling bad inputs from clients doesn't necessarily have to lead to a 4\*\* status code. Handling can include using default behaviours or even ignoring parts of the request.
 
 ---
 
@@ -31,7 +31,7 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 
 ### GET `/not-a-route`
 
-- Status:
+- Status: 404 - non existent path [SS - Done]
 
 ### PATCH / PUT / POST / DELETE... `/api/articles` etc...
 
@@ -43,11 +43,12 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 
 ### GET `/api/topics`
 
--
+- SS: What if no topics are returned? 204 - No content? [But, since our db is always seeded, this would be a problem with our server - review under 500 errors]
 
 ### GET `/api/users/:username`
 
--
+-SS: User ID is a string that doesn't exist in the database - 404
+-SS: User ID is in incorrect format (i.e. not a string) - No - not a problem, since an entry of 1 would simply be a tring of "1"
 
 ### GET `/api/articles/:article_id`
 
@@ -71,10 +72,10 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 ### GET `/api/articles`
 
 - Bad queries:
-  - `sort_by` a column that doesn't exist
-  - `order` !== "asc" / "desc"
-  - `author` / `topic` that is not in the database
-  - `author` / `topic` that exists but does not have any articles associated with it
+  - `sort_by` a column that doesn't exist SS: 400 - done
+  - `order` !== "asc" / "desc" SS: 400 - done
+  - `author` / `topic` that is not in the database SS: 400 - done (but currently combined with below)
+  - `author` / `topic` that exists but does not have any articles associated with it SS: 400 - done (as above)
 
 ### PATCH `/api/comments/:comment_id`
 

@@ -6,7 +6,7 @@
   "scripts": {
     "setup-dbs": "psql -f ./db/setup.sql",
     "seed": "knex seed:run",
-    "test": "NODE_ENV=test && npm run seed && jest --watch",
+    "test": "NODE_ENV=test && jest --watch",
     "migrate-latest": "knex migrate:latest",
     "migrate-rollback": "knex migrate:rollback"
   },
@@ -28,6 +28,12 @@
   },
   "devDependencies": {
     "jest": "^26.2.2",
+    "jest-sorted": "^1.0.6",
     "supertest": "^4.0.2"
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "jest-sorted"
+    ]
   }
 }

@@ -53,7 +53,7 @@ describe("app", () => {
             expect(user.name).toBe(testUser.name);
           });
 
-        //Maybe not a great idea to require in the testData - someone reading the tests doesnt now what to expect.
+        //Maybe not a great idea to require in the testData - someone reading the tests doesnt nkow what to expect.
       });
       test("GET: 404 - Username doesn't exist in the database", () => {
         const apiString = `/api/users/samstyles`;
@@ -138,12 +138,12 @@ describe("app", () => {
             });
           });
       });
-      test.only("GET: 400 - sort_by column doesn't exist", () => {
+      test("GET: 400 - sort_by column doesn't exist", () => {
         return request(app)
           .get("/api/articles?sort_by=streetcred")
           .expect(400)
           .then(({ body: { msg } }) => {
-            expect(msg).toBe("bad request!!!");
+            expect(msg).toBe("bad request to db!!!");
           });
       });
       test("GET: 400 - order not asc or desc", () => {
@@ -199,21 +199,78 @@ describe("app", () => {
               );
             });
         });
-        test("GET: 200 - comment_count & article_id are correct", () => {
+        test("GET: 200 - comment_count & article_id are correct; ", () => {
           return request(app)
             .get("/api/articles/1")
             .expect(200)
             .then(({ body: { article } }) => {
               expect(article.comment_count).toBe(13);
               expect(article.article_id).toBe(1);
+              expect(article.title).toBe("Living in the shadow of a great man");
+              expect(article.votes).toBe(100);
+              expect(article.topic).toBe("mitch");
+              expect(article.author).toBe("butter_bridge");
+              expect(article.created_at).toBe("2018-11-15T12:21:54.171Z");
+            });
+        });
+        test("GET: 400 - bad article_id", () => {
+          return request(app)
+            .get("/api/articles/dog")
+            .expect(400)
+            .then(({ body: { msg } }) => {
+              expect(msg).toBe("bad request to db!!!");
+            });
+        });
+        test("GET: 404 - Well formed article_id that doesn't exist in the database", () => {
+          return request(app)
+            .get("/api/articles/999999")
+            .expect(404)
+            .then(({ body: { msg } }) => {
+              expect(msg).toBe("article not found!!!");
+            });
+        });
+        test("PATCH: 201 - update vote count of an article", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .expect(201)
+            .send({ inc_votes: 42 })
+            .then(({ body: { article } }) => {
+              expect(article.comment_count).toBe(13);
+              expect(article.article_id).toBe(1);
+              expect(article.title).toBe("Living in the shadow of a great man");
+              expect(article.votes).toBe(142);
+              expect(article.topic).toBe("mitch");
+              expect(article.author).toBe("butter_bridge");
+              expect(article.created_at).toBe("2018-11-15T12:21:54.171Z");
+            });
+        });
+        test("PATCH: 400 - No `inc_votes` on request body", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .expect(400)
+            .then(({ body: { msg } }) => {
+              expect(msg).toBe("bad request to db!!!");
+            });
+        });
+        test("PATCH: 400 - Invalid `inc_votes", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .expect(400)
+            .send({ inc_votes: "cat" })
+            .then(({ body: { msg } }) => {
+              expect(msg).toBe("bad request to db!!!");
+            });
+        });
+        test("PATCH: 400 - Some other property on request body", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .expect(400)
+            .send({ inc_votes: 1, name: "Mitch" })
+            .then(({ body: { msg } }) => {
+              expect(msg).toBe("invalid patch parameter!!!");
             });
         });
       });
     });
   });
 });
-
-/*
-- Bad queries:
-  - `author` / `topic` that exists but does not have any articles associated with it
-*/

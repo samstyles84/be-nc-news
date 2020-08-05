@@ -31,7 +31,7 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 
 ### GET `/not-a-route`
 
-- Status: 404 - non existent path [SS - Done]
+- `Status: 404 - non existent path [SS - Done]`
 
 ### PATCH / PUT / POST / DELETE... `/api/articles` etc...
 
@@ -47,19 +47,18 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 
 ### GET `/api/users/:username`
 
--SS: User ID is a string that doesn't exist in the database - 404
--SS: User ID is in incorrect format (i.e. not a string) - No - not a problem, since an entry of 1 would simply be a tring of "1"
+-`SS: User ID is a string that doesn't exist in the database - 404 - DONE` -`SS: User ID is in incorrect format (i.e. not a string) - No - not a problem, since an entry of 1 would simply be a tring of "1"`
 
 ### GET `/api/articles/:article_id`
 
-- Bad `article_id` (e.g. `/dog`)
-- Well formed `article_id` that doesn't exist in the database (e.g. `/999999`)
+- `Bad article_id (e.g. /dog) - [SS: 400; psql error]`
+- `Well formed article_id that doesn't exist in the database (e.g. /999999) [SS: 404 not found]`
 
 ### PATCH `/api/articles/:article_id`
 
-- No `inc_votes` on request body
-- Invalid `inc_votes` (e.g. `{ inc_votes : "cat" }`)
-- Some other property on request body (e.g. `{ inc_votes : 1, name: 'Mitch' }`)
+- `` No `inc_votes` on request body [SS: patch method makes no sense without this; 400 (causes a psql error)] ``
+  `` - Invalid `inc_votes` (e.g. `{ inc_votes : "cat" }`) [400 As above] ``
+  `- Some other property on request body (e.g.`{ inc_votes : 1, name: 'Mitch' }`) [SS: we definitely don't want this to be updated! We could either reject it, or ignore it. To me, it feels better to reject it, otherwise we will be telling people they have been successful, when half of their request has been ignored. So, 400]`
 
 ### POST `/api/articles/:article_id/comments`
 

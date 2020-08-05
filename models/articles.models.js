@@ -84,11 +84,3 @@ exports.updateArticle = (params, body) => {
     return exports.fetchArticle(params);
   });
 };
-
-// this.fetchArticle(req.params).then();
-
-// return query.then((articleArray) => {
-//   console.log(articleArray, "<-article array");
-//   articleArray[0].comment_count = parseInt(articleArray[0].comment_count);
-//   return articleArray[0];
-// });

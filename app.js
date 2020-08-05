@@ -5,6 +5,7 @@ const {
   handlePSQLErrors,
   handleCustomErrors,
   badPathError,
+  handle500s,
 } = require("./errors");
 
 const app = express();
@@ -17,5 +18,6 @@ app.all("*", badPathError);
 
 app.use(handlePSQLErrors);
 app.use(handleCustomErrors);
+app.use(handle500s);
 
 module.exports = app;

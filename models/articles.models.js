@@ -34,6 +34,7 @@ exports.fetchArticles = ({
       return query.then((articles) => {
         articles.forEach((article) => {
           delete article.body;
+          // we could omit the body by not selecting the column!!
           article.comment_count = parseInt(article.comment_count);
         });
         return articles;
@@ -76,11 +77,28 @@ exports.updateArticle = (params, body) => {
   const query = knex
     .select("articles.*")
     .from("articles")
-    .where("article_id", article_id)
-    .increment({ votes: inc_votes })
-    .returning("*");
+    .where("articles.article_id", article_id)
+    .increment({ votes: inc_votes });
 
-  return query.then((articleArray) => {
+  return query.then(() => {
     return exports.fetchArticle(params);
+    //open to interpretation whether this step is needed!
+  });
+};
+
+exports.checkArticleExists = (article_id) => {
+  const articleQuery = knex.select().from("articles").returning("*");
+
+  if (article_id != "all") articleQuery.where("article_id", article_id);
+
+  return articleQuery.then((articleRows) => {
+    if (articleRows.length != 0) {
+      return true;
+    } else {
+      return Promise.reject({
+        status: 404,
+        msg: "article not found in db!!!",
+      });
+    }
   });
 };

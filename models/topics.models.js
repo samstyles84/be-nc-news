@@ -14,7 +14,7 @@ exports.checkTopicExists = (topic) => {
       return true;
     } else {
       return Promise.reject({
-        status: 400,
+        status: 404,
         msg: "topic not found in db!!!",
       });
     }

@@ -14,7 +14,7 @@ exports.checkUserExists = (user) => {
       return true;
     } else {
       return Promise.reject({
-        status: 400,
+        status: 404,
         msg: "author not found in db!!!",
       });
     }

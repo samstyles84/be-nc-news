@@ -39,6 +39,20 @@ describe("app", () => {
             );
           });
       });
+      test("INVALID METHODS: 405 error", () => {
+        const invalidMethods = ["put", "post", "patch", "delete"];
+        const endPoint = "/api/topics";
+
+        const promises = invalidMethods.map((method) => {
+          return request(app)
+            [method](endPoint)
+            .expect(405)
+            .then(({ body: { msg } }) => {
+              expect(msg).toBe("method not allowed!!!");
+            });
+        });
+        return Promise.all(promises);
+      });
     });
     describe("/users/:username", () => {
       test("GET: 200 - responds with a user object with corerct username, avatar & name", () => {
@@ -64,6 +78,20 @@ describe("app", () => {
           .then(({ body: { msg } }) => {
             expect(msg).toBe("username not found");
           });
+      });
+      test("INVALID METHODS: 405 error", () => {
+        const invalidMethods = ["put", "post", "patch", "delete"];
+        const endPoint = "/api/users/butter_bridge";
+
+        const promises = invalidMethods.map((method) => {
+          return request(app)
+            [method](endPoint)
+            .expect(405)
+            .then(({ body: { msg } }) => {
+              expect(msg).toBe("method not allowed!!!");
+            });
+        });
+        return Promise.all(promises);
       });
     });
     describe("/articles", () => {
@@ -179,6 +207,20 @@ describe("app", () => {
             expect(articles.length).toBe(0);
           });
       });
+      test("INVALID METHODS: 405 error", () => {
+        const invalidMethods = ["put", "post", "patch", "delete"];
+        const endPoint = "/api/articles";
+
+        const promises = invalidMethods.map((method) => {
+          return request(app)
+            [method](endPoint)
+            .expect(405)
+            .then(({ body: { msg } }) => {
+              expect(msg).toBe("method not allowed!!!");
+            });
+        });
+        return Promise.all(promises);
+      });
 
       describe("/articles/:article_id", () => {
         test("GET: 200 - returns an article object with the correct properties", () => {
@@ -270,6 +312,20 @@ describe("app", () => {
             .then(({ body: { msg } }) => {
               expect(msg).toBe("invalid patch parameter!!!");
             });
+        });
+        test("INVALID METHODS: 405 error", () => {
+          const invalidMethods = ["put", "post", "delete"];
+          const endPoint = "/api/articles/1";
+
+          const promises = invalidMethods.map((method) => {
+            return request(app)
+              [method](endPoint)
+              .expect(405)
+              .then(({ body: { msg } }) => {
+                expect(msg).toBe("method not allowed!!!");
+              });
+          });
+          return Promise.all(promises);
         });
         describe("/articles/:article_id/comments", () => {
           test("POST: 201 - post a comment and returns it", () => {
@@ -409,6 +465,20 @@ describe("app", () => {
                 expect(msg).toBe("article not found in db!!!");
               });
           });
+          test("INVALID METHODS: 405 error", () => {
+            const invalidMethods = ["put", "patch", "delete"];
+            const endPoint = "/api/articles/1/comments";
+
+            const promises = invalidMethods.map((method) => {
+              return request(app)
+                [method](endPoint)
+                .expect(405)
+                .then(({ body: { msg } }) => {
+                  expect(msg).toBe("method not allowed!!!");
+                });
+            });
+            return Promise.all(promises);
+          });
         });
       });
     });
@@ -461,7 +531,7 @@ describe("app", () => {
             expect(msg).toBe("bad request to db!!!");
           });
       });
-      test.only("PATCH: 400 - Well formed article_id that doesn't exist in the database", () => {
+      test("PATCH: 400 - Well formed article_id that doesn't exist in the database", () => {
         return request(app)
           .patch("/api/comments/999999")
           .expect(400)
@@ -497,6 +567,20 @@ describe("app", () => {
           .then(({ body: { msg } }) => {
             expect(msg).toBe("bad request to db!!!");
           });
+      });
+      test("INVALID METHODS: 405 error", () => {
+        const invalidMethods = ["put", "post", "get"];
+        const endPoint = "/api/comments/1";
+
+        const promises = invalidMethods.map((method) => {
+          return request(app)
+            [method](endPoint)
+            .expect(405)
+            .then(({ body: { msg } }) => {
+              expect(msg).toBe("method not allowed!!!");
+            });
+        });
+        return Promise.all(promises);
       });
     });
   });

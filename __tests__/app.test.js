@@ -23,28 +23,41 @@ describe("app", () => {
   });
 
   describe("/api", () => {
-    // test("GET: 200 - responds with a JSON object describing all available endpoints", () => {
-    //   return request(app)
-    //     .get("/api")
-    //     .expect(200)
-    //     .then(({ body }) => {
-    //       expect(body).toEqual(expect.objectContaining({}));
-    //     });
-    // });
-    // test("INVALID METHODS: 405 error", () => {
-    //   const invalidMethods = ["put", "post", "patch", "delete"];
-    //   const endPoint = "/api";
+    test("GET: 200 - responds with a JSON object describing all available endpoints", () => {
+      return request(app)
+        .get("/api")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body).toEqual(
+            expect.objectContaining({
+              "GET /api": expect.any(Object),
+              "GET /api/topics": expect.any(Object),
+              "GET /api/users/:username": expect.any(Object),
+              "GET /api/articles": expect.any(Object),
+              "GET /api/articles/:article_id": expect.any(Object),
+              "PATCH /api/articles/:article_id": expect.any(Object),
+              "POST /api/articles/:article_id/comments": expect.any(Object),
+              "GET /api/articles/:article_id/comments": expect.any(Object),
+              "PATCH /api/comments/:comment_id": expect.any(Object),
+              "DELETE /api/comments/:comment_id": expect.any(Object),
+            })
+          );
+        });
+    });
+    test("INVALID METHODS: 405 error", () => {
+      const invalidMethods = ["put", "post", "patch", "delete"];
+      const endPoint = "/api";
 
-    //   const promises = invalidMethods.map((method) => {
-    //     return request(app)
-    //       [method](endPoint)
-    //       .expect(405)
-    //       .then(({ body: { msg } }) => {
-    //         expect(msg).toBe("method not allowed!!!");
-    //       });
-    //   });
-    //   return Promise.all(promises);
-    // });
+      const promises = invalidMethods.map((method) => {
+        return request(app)
+          [method](endPoint)
+          .expect(405)
+          .then(({ body: { msg } }) => {
+            expect(msg).toBe("method not allowed!!!");
+          });
+      });
+      return Promise.all(promises);
+    });
     describe("/topics", () => {
       test("GET: 200 - responds with an array of all topics", () => {
         return request(app)

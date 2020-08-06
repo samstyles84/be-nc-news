@@ -9,19 +9,124 @@
       "topics": [{ "slug": "football", "description": "Footie!" }]
     }
   },
+  "GET /api/users/:username": {
+    "description": "serves the corresponding username object",
+    "queries": [],
+    "exampleResponse": {
+      "user": {
+        "username": "butter_bridge",
+        "avatar_url": "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg",
+        "name": "jonny"
+      }
+    }
+  },
   "GET /api/articles": {
-    "description": "serves an array of all topics",
+    "description": "serves an array of all articles, with no bodies",
     "queries": ["author", "topic", "sort_by", "order"],
     "exampleResponse": {
       "articles": [
         {
+          "article_id": 1,
           "title": "Seafood substitutions are increasing",
+          "votes": 100,
           "topic": "cooking",
           "author": "weegembump",
-          "body": "Text from the article..",
-          "created_at": 1527695953341
+          "created_at": 1527695953341,
+          "comment_count": 13
         }
       ]
     }
+  },
+  "GET /api/articles/:article_id": {
+    "description": "serves the corresponding article object, including the body",
+    "queries": [],
+    "exampleResponse": {
+      "article": {
+        "article_id": 1,
+        "title": "Seafood substitutions are increasing",
+        "votes": 100,
+        "topic": "cooking",
+        "author": "weegembump",
+        "created_at": 1527695953341,
+        "body": "the body of the article",
+        "comment_count": 13
+      }
+    }
+  },
+  "PATCH /api/articles/:article_id": {
+    "description": "updates the vote count of the corresponding article and responds with the updated article object",
+    "queries": [],
+    "examplePatchObject": { "inc_votes": 42 },
+    "exampleResponse": {
+      "article": {
+        "article_id": 1,
+        "title": "Seafood substitutions are increasing",
+        "votes": 142,
+        "topic": "cooking",
+        "author": "weegembump",
+        "created_at": 1527695953341,
+        "body": "the body of the article",
+        "comment_count": 13
+      }
+    }
+  },
+  "POST /api/articles/:article_id/comments": {
+    "description": "posts a comment about the corresponding article and returns the comment",
+    "queries": [],
+    "examplePostObject": {
+      "username": "butter_bridge",
+      "body": "testing the POST endpoint"
+    },
+    "exampleResponse": {
+      "comment": {
+        "author": "butter_bridge",
+        "body": "testing the POST endpoint",
+        "article_id": 1,
+        "votes": 0,
+        "created_at": 1727695953341
+      }
+    }
+  },
+  "GET /api/articles/:article_id/comments": {
+    "description": "returns an array of all of the comments relating to the corersponding article",
+    "queries": [],
+    "exampleResponse": {
+      "comments": [
+        {
+          "comment_id": 1,
+          "votes": 100,
+          "author": "someone_else",
+          "created_at": 1527695953341,
+          "body": "an old comment"
+        },
+        {
+          "comment_id": 2,
+          "votes": 0,
+          "author": "butter_bridge",
+          "created_at": 1727695953341,
+          "body": "testing the POST endpoint"
+        }
+      ]
+    }
+  },
+  "PATCH /api/comments/:comment_id": {
+    "description": "updates the vote count of the corresponding comment and responds with the updated comment object",
+    "queries": [],
+    "examplePatchObject": {
+      "inc_votes": 42
+    },
+    "exampleResponse": {
+      "comment": {
+        "comment_id": 1,
+        "votes": 142,
+        "author": "someone_else",
+        "created_at": 1527695953341,
+        "body": "an old comment"
+      }
+    }
+  },
+  "DELETE /api/comments/:comment_id": {
+    "description": "deletes a comment from the database returning status code 204 if successful",
+    "queries": []
   }
 }

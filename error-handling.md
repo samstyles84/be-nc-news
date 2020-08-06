@@ -97,4 +97,4 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 
 ### GET `/api`
 
--
+`-SS: Invalid methods [405]`

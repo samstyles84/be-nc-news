@@ -47,13 +47,18 @@ exports.updateComment = (params, body) => {
   }
 
   const query = knex
-    .select("*")
     .from("comments")
     .where("comments.comment_id", comment_id)
     .increment({ votes: inc_votes })
     .returning("*");
 
   return query.then((commentArray) => {
+    if (commentArray.length === 0) {
+      return Promise.reject({
+        status: 404,
+        msg: "non-existant comment id!!!",
+      });
+    }
     return commentArray[0];
   });
 };

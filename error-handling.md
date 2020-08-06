@@ -35,7 +35,7 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 
 ### PATCH / PUT / POST / DELETE... `/api/articles` etc...
 
-- Status: 405 - error handler implemented but not tested yet
+`- Status: 405 - error handler & testing implemented`
 
 ---
 
@@ -58,14 +58,14 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 
 - `` No `inc_votes` on request body [SS: patch method makes no sense without this; 400 (causes a psql error)] ``
   `` - Invalid `inc_votes` (e.g. `{ inc_votes : "cat" }`) [400 As above] ``
-  `- Some other property on request body (e.g.{ inc_votes : 1, name: 'Mitch' }) [SS: we definitely don't want this to be updated! We could either reject it, or ignore it. To me, it feels better to reject it, otherwise we will be telling people they have been successful, when half of their request has been ignored. So, 400] Jim's view is it might better to ignore, since this would be more flexible for future scalability.`
+  `- Some other property on request body (e.g.{ inc_votes : 1, name: 'Mitch' }) [SS: we definitely don't want this to be updated! We could either reject it, or ignore it. To me, it feels better to reject it, otherwise we will be telling people they have been successful, when half of their request has been ignored. So, 400] Jim's view is it might better to ignore, since this would be more flexible for future scalability - implemented this now, status 201.`
   `- [SS: What if the increment takes the number of votes below zero?? talked to jim - Commonly you can upvote and downvote anyway!]`
 
 ### POST `/api/articles/:article_id/comments`
 
 `[SS: - bad article id (e.g. dog) - 400]`
 `[SS: - well formed article id but doesnt exist- 404]`
-`[SS: - User doesn't exist - 400 (since this generates a psql error) -`is this right?
+`[SS: - User doesn't exist - 404`
 `[SS: no body is sent] - 400`
 
 ### GET `/api/articles/:article_id/comments`
@@ -88,7 +88,7 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 `- Invalid inc_votes (e.g. { inc_votes : "cat" }) [400 As above]`
 `- Some other property on request body (e.g.{ inc_votes : 1, name: 'Mitch' }) [SS: we definitely don't want this to be updated! We could either reject it, or ignore it. To me, it feels better to reject it, otherwise we will be telling people they have been successful, when half of their request has been ignored. So, 400] Jim's view is it might better to ignore, since this would be more flexible for future scalability.`
 `[SS: -Invalid comment id - badly formed (400)]`
-`[SS: -Invalid comment id - non-existant (400)]` - Note - this actually casues a db error rather than a path error, as you are telling it to patch something that doesnt exists. So, it generates a 22P02 error in SQL and falls into the 400 error handler.
+`[SS: -Invalid comment id - non-existant Should be a 404 error .`
 
 ### DELETE `/api/comments/:comment_id`
 

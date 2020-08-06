@@ -23,6 +23,28 @@ describe("app", () => {
   });
 
   describe("/api", () => {
+    // test("GET: 200 - responds with a JSON object describing all available endpoints", () => {
+    //   return request(app)
+    //     .get("/api")
+    //     .expect(200)
+    //     .then(({ body }) => {
+    //       expect(body).toEqual(expect.objectContaining({}));
+    //     });
+    // });
+    // test("INVALID METHODS: 405 error", () => {
+    //   const invalidMethods = ["put", "post", "patch", "delete"];
+    //   const endPoint = "/api";
+
+    //   const promises = invalidMethods.map((method) => {
+    //     return request(app)
+    //       [method](endPoint)
+    //       .expect(405)
+    //       .then(({ body: { msg } }) => {
+    //         expect(msg).toBe("method not allowed!!!");
+    //       });
+    //   });
+    //   return Promise.all(promises);
+    // });
     describe("/topics", () => {
       test("GET: 200 - responds with an array of all topics", () => {
         return request(app)
@@ -275,8 +297,8 @@ describe("app", () => {
         test("PATCH: 201 - update vote count of an article", () => {
           return request(app)
             .patch("/api/articles/1")
-            .expect(201)
             .send({ inc_votes: 42 })
+            .expect(201)
             .then(({ body: { article } }) => {
               expect(article.comment_count).toBe(13);
               expect(article.article_id).toBe(1);
@@ -298,19 +320,42 @@ describe("app", () => {
         test("PATCH: 400 - Invalid `inc_votes", () => {
           return request(app)
             .patch("/api/articles/1")
-            .expect(400)
             .send({ inc_votes: "cat" })
+            .expect(400)
             .then(({ body: { msg } }) => {
               expect(msg).toBe("bad request to db!!!");
             });
         });
-        test("PATCH: 400 - Some other property on request body", () => {
+        test("PATCH: 201 - Some other property on request body", () => {
           return request(app)
             .patch("/api/articles/1")
-            .expect(400)
-            .send({ inc_votes: 1, name: "Mitch" })
+            .send({ inc_votes: 42, name: "Mitch" })
+            .expect(201)
+            .then(({ body: { article } }) => {
+              expect(article.comment_count).toBe(13);
+              expect(article.article_id).toBe(1);
+              expect(article.title).toBe("Living in the shadow of a great man");
+              expect(article.votes).toBe(142);
+              expect(article.topic).toBe("mitch");
+              expect(article.author).toBe("butter_bridge");
+              expect(article.created_at).toBe("2018-11-15T12:21:54.171Z");
+            });
+
+          // return request(app)
+          //   .patch("/api/articles/1")
+          //   .send({ inc_votes: 1, name: "Mitch" })
+          //   .expect(400)
+          //   .then(({ body: { msg } }) => {
+          //     expect(msg).toBe("invalid patch parameter!!!");
+          //   });
+        });
+        test("PATCH: 404 - Well formed article_id that doesn't exist in the database", () => {
+          return request(app)
+            .patch("/api/articles/999999")
+            .send({ inc_votes: 42 })
+            .expect(404)
             .then(({ body: { msg } }) => {
-              expect(msg).toBe("invalid patch parameter!!!");
+              expect(msg).toBe("article not found!!!");
             });
         });
         test("INVALID METHODS: 405 error", () => {
@@ -331,11 +376,11 @@ describe("app", () => {
           test("POST: 201 - post a comment and returns it", () => {
             return request(app)
               .post("/api/articles/1/comments")
-              .expect(201)
               .send({
                 username: "butter_bridge",
                 body: "testing the POST endpoint",
               })
+              .expect(201)
               .then(
                 ({
                   body: {
@@ -353,11 +398,11 @@ describe("app", () => {
           test("POST: 400 - bad article_id", () => {
             return request(app)
               .post("/api/articles/dog/comments")
-              .expect(400)
               .send({
                 username: "butter_bridge",
                 body: "testing the POST endpoint",
               })
+              .expect(400)
               .then(({ body: { msg } }) => {
                 expect(msg).toBe("bad request to db!!!");
               });
@@ -365,34 +410,34 @@ describe("app", () => {
           test("POST: 404 - Well formed article_id that doesn't exist in the database", () => {
             return request(app)
               .post("/api/articles/999999/comments")
-              .expect(404)
               .send({
                 username: "butter_bridge",
                 body: "testing the POST endpoint",
               })
+              .expect(404)
               .then(({ body: { msg } }) => {
                 expect(msg).toBe("article not found in db!!!");
               });
           });
-          test("POST: 400 - User_id that doesn't exist in the database", () => {
+          test("POST: 422 - User_id that doesn't exist in the database", () => {
             return request(app)
               .post("/api/articles/1/comments")
-              .expect(400)
               .send({
                 username: "samstyles",
                 body: "testing the POST endpoint",
               })
+              .expect(422)
               .then(({ body: { msg } }) => {
-                expect(msg).toBe("bad request to db!!!");
+                expect(msg).toBe("request could not be processed in db!!!");
               });
           });
           test("POST: 400 - no body is sent", () => {
             return request(app)
               .post("/api/articles/1/comments")
-              .expect(400)
               .send({
                 username: "butter_bridge",
               })
+              .expect(400)
               .then(({ body: { msg } }) => {
                 expect(msg).toBe("bad request to db!!!");
               });
@@ -486,8 +531,8 @@ describe("app", () => {
       test("PATCH: 201 - returns an updated comment object", () => {
         return request(app)
           .patch("/api/comments/1")
-          .expect(201)
           .send({ inc_votes: 42 })
+          .expect(201)
           .then(({ body: { comment } }) => {
             expect(comment.comment_id).toBe(1);
             expect(comment.votes).toBe(58);
@@ -508,8 +553,8 @@ describe("app", () => {
       test("PATCH: 400 - Invalid `inc_votes", () => {
         return request(app)
           .patch("/api/comments/1")
-          .expect(400)
           .send({ inc_votes: "cat" })
+          .expect(400)
           .then(({ body: { msg } }) => {
             expect(msg).toBe("bad request to db!!!");
           });
@@ -517,8 +562,8 @@ describe("app", () => {
       test("PATCH: 400 - Some other property on request body", () => {
         return request(app)
           .patch("/api/comments/1")
-          .expect(400)
           .send({ inc_votes: 1, name: "Mitch" })
+          .expect(400)
           .then(({ body: { msg } }) => {
             expect(msg).toBe("invalid patch parameter!!!");
           });
@@ -526,17 +571,19 @@ describe("app", () => {
       test("PATCH: 400 - bad comment_id", () => {
         return request(app)
           .patch("/api/comments/dog")
+          .send({ inc_votes: 42 })
           .expect(400)
           .then(({ body: { msg } }) => {
             expect(msg).toBe("bad request to db!!!");
           });
       });
-      test("PATCH: 400 - Well formed article_id that doesn't exist in the database", () => {
+      test("PATCH: 404 - Well formed comment_id that doesn't exist in the database", () => {
         return request(app)
           .patch("/api/comments/999999")
-          .expect(400)
+          .send({ inc_votes: 42 })
+          .expect(404)
           .then(({ body: { msg } }) => {
-            expect(msg).toBe("bad request to db!!!");
+            expect(msg).toBe("non-existant comment id!!!");
           });
       });
       test("DELETE: 204 - Deletes a comment from the database", () => {

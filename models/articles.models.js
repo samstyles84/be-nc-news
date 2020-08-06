@@ -20,7 +20,14 @@ exports.fetchArticles = ({
   }
 
   const query = knex
-    .select("articles.*")
+    .select(
+      "articles.author",
+      "articles.title",
+      "articles.article_id",
+      "articles.topic",
+      "articles.created_at",
+      "articles.votes"
+    )
     .from("articles")
     .join("comments", "articles.article_id", "comments.article_id")
     .groupBy("articles.article_id")
@@ -33,8 +40,6 @@ exports.fetchArticles = ({
       if (author != "all") query.where("articles.author", author);
       return query.then((articles) => {
         articles.forEach((article) => {
-          delete article.body;
-          // we could omit the body by not selecting the column!!
           article.comment_count = parseInt(article.comment_count);
         });
         return articles;
@@ -45,7 +50,15 @@ exports.fetchArticles = ({
 
 exports.fetchArticle = ({ article_id }) => {
   const query = knex
-    .select("articles.*")
+    .select(
+      "articles.author",
+      "articles.title",
+      "articles.article_id",
+      "articles.topic",
+      "articles.created_at",
+      "articles.votes",
+      "articles.body"
+    )
     .from("articles")
     .join("comments", "articles.article_id", "comments.article_id")
     .groupBy("articles.article_id")
@@ -67,12 +80,13 @@ exports.updateArticle = (params, body) => {
   const { article_id } = params;
   const { inc_votes } = body;
 
-  if (Object.keys(body).length > 1) {
-    return Promise.reject({
-      status: 400,
-      msg: "invalid patch parameter!!!",
-    });
-  }
+  // Kept the code below in case an extra parameter should cause an error
+  // if (Object.keys(body).length > 1) {
+  //   return Promise.reject({
+  //     status: 400,
+  //     msg: "invalid patch parameter!!!",
+  //   });
+  // }
 
   const query = knex
     .select("articles.*")

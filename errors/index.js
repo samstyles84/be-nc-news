@@ -8,12 +8,14 @@ exports.badPathError = (req, res, next) => {
 
 exports.handlePSQLErrors = (err, req, res, next) => {
   if (
-    err.code === "42703" ||
-    err.code === "22P02" ||
-    err.code === "23503" ||
-    err.code === "23502"
+    err.code === "42703" || //undefined column
+    err.code === "23502" || //not null violation
+    err.code === "22P02" // invalid text represetnation
   ) {
     res.status(400).send({ msg: "bad request to db!!!" });
+  } else if (err.code === "23503") {
+    //foreign key violation - 422
+    res.status(422).send({ msg: "request could not be processed in db!!!" });
   } else next(err);
 };
 

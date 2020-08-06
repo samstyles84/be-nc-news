@@ -35,7 +35,7 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 
 ### PATCH / PUT / POST / DELETE... `/api/articles` etc...
 
-- Status:
+- Status: 405 - error handler implemented but not tested yet
 
 ---
 
@@ -43,7 +43,7 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 
 ### GET `/api/topics`
 
-- SS: What if no topics are returned? 204 - No content? [But, since our db is always seeded, this would be a problem with our server - review under 500 errors]
+`- SS: What if no topics are returned? 204 - No content? [But, since our db is always seeded, this would be a problem with our server]`
 
 ### GET `/api/users/:username`
 
@@ -59,13 +59,14 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 - `` No `inc_votes` on request body [SS: patch method makes no sense without this; 400 (causes a psql error)] ``
   `` - Invalid `inc_votes` (e.g. `{ inc_votes : "cat" }`) [400 As above] ``
   `- Some other property on request body (e.g.{ inc_votes : 1, name: 'Mitch' }) [SS: we definitely don't want this to be updated! We could either reject it, or ignore it. To me, it feels better to reject it, otherwise we will be telling people they have been successful, when half of their request has been ignored. So, 400] Jim's view is it might better to ignore, since this would be more flexible for future scalability.`
-  - [SS: What if the increment takes the number of votes below zero?? Commonly you can upvote and downvote anyway!]
+  `- [SS: What if the increment takes the number of votes below zero?? talked to jim - Commonly you can upvote and downvote anyway!]`
 
 ### POST `/api/articles/:article_id/comments`
 
 `[SS: - bad article id (e.g. dog) - 400]`
 `[SS: - well formed article id but doesnt exist- 404]`
-[SS: `- User doesn't exist - 400 (since this generates a psql error) - is this right?`[SS: no body is sent] - 400`
+`[SS: - User doesn't exist - 400 (since this generates a psql error) -`is this right?
+`[SS: no body is sent] - 400`
 
 ### GET `/api/articles/:article_id/comments`
 
@@ -76,22 +77,23 @@ Bear in mind, handling bad inputs from clients doesn't necessarily have to lead 
 ### GET `/api/articles`
 
 - Bad queries:
-  - `sort_by` a column that doesn't exist [SS: 400 - done]
-  - `order` !== "asc" / "desc" [SS: 400 - done]
-  - `author` / `topic` that is not in the database [SS: 400 - done (but currently combined with below)]
-  - `author` / `topic` that exists but does not have any articles associated with it [SS: From speaking to Jim, this should be a 200- done]
+  `- sort_by a column that doesn't exist [SS: 400 - done]`
+  `- order !== "asc" / "desc" [SS: 400 - done]`
+  `- author / topic that is not in the database [SS: 400 - done]`
+  `- author / topic that exists but does not have any articles associated with it [SS: From speaking to Jim, this should be a 200- done]`
 
 ### PATCH `/api/comments/:comment_id`
 
 `- No inc_votes on request body [SS: patch method makes no sense without this; 400 (causes a psql error)]`
 `- Invalid inc_votes (e.g. { inc_votes : "cat" }) [400 As above]`
 `- Some other property on request body (e.g.{ inc_votes : 1, name: 'Mitch' }) [SS: we definitely don't want this to be updated! We could either reject it, or ignore it. To me, it feels better to reject it, otherwise we will be telling people they have been successful, when half of their request has been ignored. So, 400] Jim's view is it might better to ignore, since this would be more flexible for future scalability.`
--Invalid comment id - badly formed
--Invalid comment id - non-existant
+`[SS: -Invalid comment id - badly formed (400)]`
+`[SS: -Invalid comment id - non-existant (400)]` - Note - this actually casues a db error rather than a path error, as you are telling it to patch something that doesnt exists. So, it generates a 22P02 error in SQL and falls into the 400 error handler.
 
 ### DELETE `/api/comments/:comment_id`
 
--
+`-SS: Comment id well formed but doesnt exist [404]`
+`-SS: Comment id badly formed [400]`
 
 ### GET `/api`
 

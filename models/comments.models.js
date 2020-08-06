@@ -57,3 +57,21 @@ exports.updateComment = (params, body) => {
     return commentArray[0];
   });
 };
+
+exports.removeComment = (params) => {
+  const { comment_id } = params;
+  const query = knex
+    .select("*")
+    .from("comments")
+    .where("comments.comment_id", comment_id)
+    .del();
+
+  return query.then((itemsDeleted) => {
+    if (itemsDeleted === 0) {
+      return Promise.reject({
+        status: 404,
+        msg: "Comment not found in db!!!",
+      });
+    }
+  });
+};

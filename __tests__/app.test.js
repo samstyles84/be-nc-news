@@ -461,9 +461,38 @@ describe("app", () => {
             expect(msg).toBe("bad request to db!!!");
           });
       });
-      test("PATCH: 400 - Well formed article_id that doesn't exist in the database", () => {
+      test.only("PATCH: 400 - Well formed article_id that doesn't exist in the database", () => {
         return request(app)
           .patch("/api/comments/999999")
+          .expect(400)
+          .then(({ body: { msg } }) => {
+            expect(msg).toBe("bad request to db!!!");
+          });
+      });
+      test("DELETE: 204 - Deletes a comment from the database", () => {
+        return request(app)
+          .delete("/api/comments/2") //This is a comment on article 1
+          .expect(204)
+          .then(() => {
+            return request(app).get("/api/articles/1/comments");
+          })
+          .then(({ body: { comments } }) => {
+            expect(comments.every((comment) => comment.comment_id !== 2)).toBe(
+              true
+            );
+          });
+      });
+      test("DELETE: 404 - well formed id but comment not in the database", () => {
+        return request(app)
+          .delete("/api/comments/999999")
+          .expect(404)
+          .then(({ body: { msg } }) => {
+            expect(msg).toBe("Comment not found in db!!!");
+          });
+      });
+      test("DELETE: 400 - badly formed id ", () => {
+        return request(app)
+          .delete("/api/comments/dog")
           .expect(400)
           .then(({ body: { msg } }) => {
             expect(msg).toBe("bad request to db!!!");

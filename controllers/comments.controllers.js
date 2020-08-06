@@ -2,6 +2,7 @@ const {
   addComment,
   fetchComments,
   updateComment,
+  removeComment,
 } = require("../models/comments.models");
 
 const postComment = (req, res, next) => {
@@ -34,4 +35,14 @@ const patchComment = (req, res, next) => {
     });
 };
 
-module.exports = { postComment, sendComments, patchComment };
+const deleteComment = (req, res, next) => {
+  removeComment(req.params)
+    .then(() => {
+      res.sendStatus(204);
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
+module.exports = { postComment, sendComments, patchComment, deleteComment };

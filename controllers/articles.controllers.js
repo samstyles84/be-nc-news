@@ -5,7 +5,9 @@ const {
 } = require("../models/articles.models");
 
 const sendArticles = (req, res, next) => {
-  fetchArticles(req.query)
+  const { sort_by, order, author, topic } = req.query;
+
+  fetchArticles(sort_by, order, author, topic)
     .then((articles) => {
       res.status(200).send({ articles });
     })
@@ -15,7 +17,9 @@ const sendArticles = (req, res, next) => {
 };
 
 const sendArticle = (req, res, next) => {
-  fetchArticle(req.params)
+  const { article_id } = req.params;
+
+  fetchArticle(article_id)
     .then((article) => {
       res.status(200).send({ article });
     })
@@ -25,7 +29,10 @@ const sendArticle = (req, res, next) => {
 };
 
 const patchArticle = (req, res, next) => {
-  updateArticle(req.params, req.body)
+  const { article_id } = req.params;
+  const { inc_votes } = req.body;
+
+  updateArticle(article_id, inc_votes)
     .then((article) => {
       res.status(200).send({ article });
     })

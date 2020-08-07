@@ -6,7 +6,10 @@ const {
 } = require("../models/comments.models");
 
 const postComment = (req, res, next) => {
-  addComment(req.params, req.body)
+  const { article_id } = req.params;
+  const { body, username } = req.body;
+
+  addComment(article_id, body, username)
     .then((comment) => {
       res.status(201).send({ comment });
     })
@@ -16,7 +19,10 @@ const postComment = (req, res, next) => {
 };
 
 const sendComments = (req, res, next) => {
-  fetchComments(req.params, req.query)
+  const { article_id } = req.params;
+  const { sort_by, order } = req.query;
+
+  fetchComments(article_id, sort_by, order)
     .then((comments) => {
       res.status(200).send({ comments });
     })
@@ -26,7 +32,10 @@ const sendComments = (req, res, next) => {
 };
 
 const patchComment = (req, res, next) => {
-  updateComment(req.params, req.body)
+  const { comment_id } = req.params;
+  const { inc_votes } = req.body;
+
+  updateComment(comment_id, inc_votes)
     .then((comment) => {
       res.status(200).send({ comment });
     })
@@ -36,7 +45,8 @@ const patchComment = (req, res, next) => {
 };
 
 const deleteComment = (req, res, next) => {
-  removeComment(req.params)
+  const { comment_id } = req.params;
+  removeComment(comment_id)
     .then(() => {
       res.sendStatus(204);
     })

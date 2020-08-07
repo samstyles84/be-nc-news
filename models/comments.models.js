@@ -1,12 +1,12 @@
 const knex = require("../connection");
 const { checkArticleExists } = require("./articles.models");
 
-exports.addComment = (params, sent) => {
-  return checkArticleExists(params.article_id).then(() => {
+exports.addComment = (article_id, body, username) => {
+  return checkArticleExists(article_id).then(() => {
     const commentToInsert = {
-      body: sent.body,
-      author: sent.username,
-      article_id: params.article_id,
+      body: body,
+      author: username,
+      article_id: article_id,
     };
 
     return knex("comments")
@@ -19,8 +19,9 @@ exports.addComment = (params, sent) => {
 };
 
 exports.fetchComments = (
-  { article_id },
-  { sort_by = "created_at", order = "desc" }
+  article_id,
+  sort_by = "created_at",
+  order = "desc"
 ) => {
   return checkArticleExists(article_id).then(() => {
     return knex
@@ -31,17 +32,7 @@ exports.fetchComments = (
   });
 };
 
-exports.updateComment = (params, body) => {
-  const { comment_id } = params;
-  const { inc_votes = 0 } = body;
-
-  if (Object.keys(body).length > 1) {
-    return Promise.reject({
-      status: 400,
-      msg: "invalid patch parameter!!!",
-    });
-  }
-
+exports.updateComment = (comment_id, inc_votes = 0) => {
   return knex
     .from("comments")
     .where("comments.comment_id", comment_id)
@@ -58,8 +49,7 @@ exports.updateComment = (params, body) => {
     });
 };
 
-exports.removeComment = (params) => {
-  const { comment_id } = params;
+exports.removeComment = (comment_id) => {
   return knex
     .select("*")
     .from("comments")

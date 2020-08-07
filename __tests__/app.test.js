@@ -588,7 +588,7 @@ describe("app", () => {
             );
           });
       });
-      test("PATCH: 400 - No `inc_votes` on request body", () => {
+      test("PATCH: 200 - No `inc_votes` on request body", () => {
         return request(app)
           .patch("/api/comments/1")
           .expect(200)
@@ -610,13 +610,18 @@ describe("app", () => {
             expect(msg).toBe("bad request to db!!!");
           });
       });
-      test("PATCH: 400 - Some other property on request body", () => {
+      test("PATCH: 200 - Some other property on request body", () => {
         return request(app)
           .patch("/api/comments/1")
           .send({ inc_votes: 1, name: "Mitch" })
-          .expect(400)
-          .then(({ body: { msg } }) => {
-            expect(msg).toBe("invalid patch parameter!!!");
+          .expect(200)
+          .then(({ body: { comment } }) => {
+            expect(comment.comment_id).toBe(1);
+            expect(comment.votes).toBe(17);
+            expect(comment.author).toBe("butter_bridge");
+            expect(comment.body).toBe(
+              "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!"
+            );
           });
       });
       test("PATCH: 400 - bad comment_id", () => {

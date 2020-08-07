@@ -4,12 +4,12 @@ const { checkTopicExists } = require("./topics.models");
 
 const { checkUserExists } = require("./users.models");
 
-exports.fetchArticles = ({
+exports.fetchArticles = (
   sort_by = "created_at",
   order = "desc",
   author,
-  topic,
-}) => {
+  topic
+) => {
   const sortByString = `articles.${sort_by}`;
 
   if (order != "asc" && order != "desc") {
@@ -49,7 +49,7 @@ exports.fetchArticles = ({
   );
 };
 
-exports.fetchArticle = ({ article_id }) => {
+exports.fetchArticle = (article_id) => {
   return knex
     .select(
       "articles.author",
@@ -77,17 +77,14 @@ exports.fetchArticle = ({ article_id }) => {
     });
 };
 
-exports.updateArticle = (params, body) => {
-  const { article_id } = params;
-  const { inc_votes = 0 } = body;
-
+exports.updateArticle = (article_id, inc_votes = 0) => {
   return knex
     .select("articles.*")
     .from("articles")
     .where("articles.article_id", article_id)
     .increment({ votes: inc_votes })
     .then(() => {
-      return exports.fetchArticle(params);
+      return exports.fetchArticle(article_id);
     });
 };
 

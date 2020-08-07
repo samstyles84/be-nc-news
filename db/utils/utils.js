@@ -1,10 +1,11 @@
-exports.formatDates = (list) => {
-  const formattedArray = [];
+const commentsControllers = require("../../controllers/comments.controllers");
 
-  list.forEach((object, i) => {
-    formattedArray[i] = { ...object };
-    formattedArray[i].created_at = new Date(formattedArray[i].created_at);
+exports.formatDates = (list) => {
+  const formattedArray = list.map(({ ...object }) => {
+    object.created_at = new Date(object.created_at);
+    return object;
   });
+
   return formattedArray;
 };
 
@@ -15,16 +16,19 @@ exports.makeRefObj = (list) => {
     const key = item.title;
     refObj[key] = val;
   });
+
   return refObj;
 };
 
 exports.formatComments = (comments, articleRef) => {
-  const formattedArray = exports.formatDates(comments);
-  formattedArray.forEach((comment) => {
+  const formattedArray = comments.map(({ ...comment }) => {
     comment.author = comment.created_by;
     comment.article_id = articleRef[comment.belongs_to];
+    comment.created_at = new Date(comment.created_at);
     delete comment.created_by;
     delete comment.belongs_to;
+    return comment;
   });
+
   return formattedArray;
 };

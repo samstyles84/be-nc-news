@@ -8,10 +8,13 @@ exports.addComment = (params, sent) => {
       author: sent.username,
       article_id: params.article_id,
     };
-    const query = knex("comments").insert(commentToInsert).returning("*");
-    return query.then((commentArray) => {
-      return commentArray[0];
-    });
+
+    return knex("comments")
+      .insert(commentToInsert)
+      .returning("*")
+      .then((commentArray) => {
+        return commentArray[0];
+      });
   });
 };
 
@@ -19,20 +22,19 @@ exports.fetchComments = (
   { article_id },
   { sort_by = "created_at", order = "desc" }
 ) => {
-  const query = knex
+  return knex
     .select("comment_id", "votes", "created_at", "author", "body")
     .from("comments")
     .where("comments.article_id", article_id)
-    .orderBy(sort_by, order);
-
-  return query.then((comments) => {
-    if (comments.length === 0) {
-      return Promise.reject({
-        status: 404,
-        msg: "article not found in db!!!",
-      });
-    } else return comments;
-  });
+    .orderBy(sort_by, order)
+    .then((comments) => {
+      if (comments.length === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: "article not found in db!!!",
+        });
+      } else return comments;
+    });
 };
 
 exports.updateComment = (params, body) => {
@@ -46,37 +48,35 @@ exports.updateComment = (params, body) => {
     });
   }
 
-  const query = knex
+  return knex
     .from("comments")
     .where("comments.comment_id", comment_id)
     .increment({ votes: inc_votes })
-    .returning("*");
-
-  return query.then((commentArray) => {
-    if (commentArray.length === 0) {
-      return Promise.reject({
-        status: 404,
-        msg: "non-existant comment id!!!",
-      });
-    }
-    return commentArray[0];
-  });
+    .returning("*")
+    .then((commentArray) => {
+      if (commentArray.length === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: "non-existant comment id!!!",
+        });
+      }
+      return commentArray[0];
+    });
 };
 
 exports.removeComment = (params) => {
   const { comment_id } = params;
-  const query = knex
+  return knex
     .select("*")
     .from("comments")
     .where("comments.comment_id", comment_id)
-    .del();
-
-  return query.then((itemsDeleted) => {
-    if (itemsDeleted === 0) {
-      return Promise.reject({
-        status: 404,
-        msg: "Comment not found in db!!!",
-      });
-    }
-  });
+    .del()
+    .then((itemsDeleted) => {
+      if (itemsDeleted === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: "Comment not found in db!!!",
+        });
+      }
+    });
 };

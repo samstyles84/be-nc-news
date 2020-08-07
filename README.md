@@ -1,369 +1,151 @@
-# Northcoders News API
+# Northcoders News API by Sam Styles
 
-**You can clone this repository but do not fork it**
+This project establishes a psql database and a series of endpoints that can be used to query and add to the data.
 
-## Background
+The project was initially established as part of the final BackEnd sprint in the Northcoders course, August 2020.
 
-We will be building the API to use in the Northcoders News Sprint during the Front End block of the course.
+The project was developed using `Node.js` [v14.4.0] and `VS Code`. `Knex` has been used as a 'query-builder' to manage the interface with the psql database, which is built using `postgres` [v12.3]. The server is established using `Express`. `Jest` and `Supertest` have been used for testing.
 
-Your database will be PSQL, and you will interact with it using [Knex](https://knexjs.org).
+The app has been published to Heroku at this location: `https://nc-hosting-samstyles84.herokuapp.com/api`
 
-## Step 1 - Setting up your own repository
+# Features
 
-Clone this repo:
+The database containts data tables relating to `topics`, `users`, `articles` and `comments`. Upwards migrations are carried out in that order when seeding the database.
 
-```bash
-git clone https://github.com/northcoders/be-nc-news
+Separate "test" and "dev" data is included in the relevant "./db/" directories.
 
-cd be-nc-news
-```
+Endpoints have been established that allow users to view and amend the data as described in the `API Reference` section below.
 
-On GitHub create your own **public** repository for your project. **Make sure NOT to initialise it with a README or .gitignore.**
+# API
 
-Next, you should hook your local version up to the newly created GitHub repo. Use the following terminal commands, making sure to check the git remotes with each step (`git remote -v`):
+The API allows access to the following endpoints. For more details refer to the "endpoints.json" file included.
 
-```bash
-git remote remove origin
+"GET /api": serves up a json representation of all the available endpoints of the api
+"GET /api/topics": serves an array of all topics
+"GET /api/users/:username": serves the corresponding username object
+"GET /api/articles": serves an array of all articles, with no bodies
+"GET /api/articles/:article_id": serves the corresponding article object, including the body
+"PATCH /api/articles/:article_id": updates the vote count of the corresponding article and responds with the updated article object
+"POST /api/articles/:article_id/comments": posts a comment about the corresponding article and returns the comment
+"GET /api/articles/:article_id/comments": returns an array of all of the comments relating to the corersponding article
+"PATCH /api/comments/:comment_id": updates the vote count of the corresponding comment and responds with the updated comment object
+"DELETE /api/comments/:comment_id": deletes a comment from the database returning status code 204 if successful
 
-# This will prevent you from pushing to the original Northcoders' repo.
-```
+# Architecture
 
-```bash
-git remote add origin <YOUR-GITHUB-URL>
+The code has been developed using MVC architecture.
 
-# This will add your GitHub location to your local git repository.
-# You can confirm this by checking the new git remote.
-```
+"app.js" identifies the correct router for the specific query. Where Heroku is used, incoming Heroku queries are identified by the "listen.js" file.
 
-## Step 2 - Setting up your project
+All well-formed queries are directed through the "/api" router into the relevant route. Routers can be found in the "./routes" folder. Each router passes well-formed queries on to the relevant Controller.
 
-In this repo we have provided you with the knexfile. Make sure to add it to the `.gitignore` once you start pushing to your own repository. If you are on linux insert your postgres username and password into the knexfile.
+The Controllers are purely used to pass information between the Routers and the Models. Controllers have been grouped into files according to their API routing and can be found in "./controllers".
 
-You have also been provided with a `db` folder with some data, a [setup.sql](./db/setup.sql) file, a `seeds` folder and a `utils` folder. You should also take a minute to familiarise yourself with the npm scripts you have been provided.
+The Models interface with the database and also (typically) handle any custom error handling. Models have been grouped into files according to their API routing and can be found in"./models".
 
-Your second task is to make accessing both sets of data around your project easier. You should make 3 `index.js` files: one in `db/data`, and one in each of your data folders (test & development).
+The models return their results back to the controllers, which return them on to the Client.
 
-The job of `index.js` in each the data folders is to export out all the data from that folder, currently stored in separate files. This is so that, when you need access to the data elsewhere, you can write one convenient require statement - to the index file, rather than having to require each file individually. Make sure the index file exports an object with values of the data from that folder with the keys:
+Errors are caught by `.catch` statements within the Controllers, and passed to the Error-Handling functions via "app.js" (see below for further information).
 
-- `topicData`
-- `articleData`
-- `userData`
-- `commentData`
+# Error-Handling
 
-The job of the `db/data/index.js` file will be to export out of the db folder _only the data relevant to the current environment_. Specifically this file should allow your seed file to access only a specific set of data depending on the environment it's in: test, development or production. To do this is will have to require in all the data and should make use of `process.env` in your `index.js` file to achieve only exporting the right data out.
+Error-Handling Functions are contained in "./errors/index.js".
 
-**HINT: make sure the keys you export match up with the keys required into the seed file**
+The server can return the following errors:
 
-## Step 3 - Migrations and Seeding
+400: Bad request (These are typically reflective of bad queries to the psql database.)
 
-Your seed file should now be set up to require in either test or dev data depending on the environment.
+404: Invalid path (These can be generated by either:
 
-You will need to create your migrations and complete the provided seed function to insert the appropriate data into your database.
+- a non-existent end-point (e.g. "/apj/topicz"), which are handled by the "badPathError" function, or
+- a well-formed request that does not return any results, which are handled by custom errors using Promise.reject, typically within the relevant model file)
 
-### Migrations
+405: Invalid method (e.g. attempting a post request to an enpoint that does not allow this functionality)
 
-This is where you will set up the schema for each table in your database.
+422: Unprocessable entity (this error is generated by a well-formed request that could not be processed by the PSQL database. It is typcially caused by a POST request associated with a resource that doesn't exist (e.g. trying to attribute a new comment to a user that does not exist))
 
-You should have separate tables for `topics`, `articles`, `users` and `comments`. You will need to think carefully about the order in which you create your migrations. You should think carefully about whether you require any constraints on your table columns (e.g. 'NOT NULL')
+500: Server error (this error code will be returned if the error does not fall into the categories above)
 
-Each topic should have:
+# Environments
 
-- `slug` field which is a unique string that acts as the table's primary key
-- `description` field which is a string giving a brief description of a given topic
+Three environments are used within the app:
 
-Each user should have:
+`test` for testing purposes
+`development` for development purposes
+`production` for deployment to Heroku
 
-- `username` which is the primary key & unique
-- `avatar_url`
-- `name`
+Unless otherwise specified, the environment will default to `development`.
 
-Each article should have:
+# Installation
 
-- `article_id` which is the primary key
-- `title`
-- `body`
-- `votes` defaults to 0
-- `topic` field which references the slug in the topics table
-- `author` field that references a user's primary key (username)
-- `created_at` defaults to the current timestamp
+To clone the project, run `git clone https://github.com/samstyles84/be-nc-news`.
 
-Each comment should have:
+Dependencies are listed in the package.json file. To install dependencies, run "npm install".
 
-- `comment_id` which is the primary key
-- `author` field that references a user's primary key (username)
-- `article_id` field that references an article's primary key
-- `votes` defaults to 0
-- `created_at` defaults to the current timestamp
-- `body`
+The user will need to create their own knexfile.js (see Knexfile Configuration, below).
 
-- **NOTE:** psql expects `Timestamp` types to be in a specific date format - **not a unix timestamp** as they are in our data! However, you can easily **re-format a unix timestamp into something compatible with our database using JS - you will be doing this in your utility function**... [JavaScript Date object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)
+To initialise (or re-initialise) the databses, run "npm run setup-dbs". This will DROP both the test and development databases (if they exist) and then CREATE new (empty) versions of each.
 
-### Seeding
+To seed the development database, type "npm run seed" at the command line. This will rollback and then migrate the development database to the latest migration (i.e. clean the development database).
 
-You need to complete the provided seed function to insert the appropriate data into your database.
+To run the test suites, use "npm test" at the command line. This will:
 
-Utilising your data manipulation skills, you will also need to complete the utility functions provided - `formatDate`, `makeRefObj`, and `formatComments` for the seed function to work. Instructions on these utility functions are in the [utils README](./db/utils/README.md).
+- set the environment to "test"
+- run "knex.seed.run" before each test in `app.test.js`.
+- this causes the file "./db/seeds/seed.js" to be run. This file rollsback the test database, and then runs all of the migrations, so that the db is clean before each test.
+- runs the tests
 
-**Some advice: don't write all the utility functions in one go, write them when you need them in your seed**
+# Knexfile Configuration
 
----
+The user will need to create their own "./knexfile.js" to determine the configuration for Knex. Refer to http://knexjs.org/#Installation-client for Knex documentation.
 
-## Step 4 - Building Endpoints
+This file should use a global variable (`process.env.NODE_ENV`) to set the correct environment (`test`, `development` or `production`). This variable also determines which version of the database should be used (`test`, for testing, `development` for development and the `Heroku` db for production).
 
-- Use proper project configuration from the offset, being sure to treat development and test environments differently.
-- Test each route **as you go**, checking both successful requests **and the variety of errors you could expect to encounter** [See the error-handling file here for ideas of errors that will need to be considered](error-handling.md).
-- After taking the happy path when testing a route, think about how a client could make it go wrong. Add a test for that situation, then error handling to deal with it gracefully.
-- **HINT**: You will need to take advantage of knex migrations in order to efficiently test your application.
+Note that "Connection.js" is also used to manage the knex connections, switching between test / development / production environments as required.
 
----
+Below are the resulting dbConfig files for each enviroment, for information:
 
-### Vital Routes
-
-Your server _must_ have the following endpoints:
-
-```http
-GET /api/topics
-
-GET /api/users/:username
-
-GET /api/articles/:article_id
-PATCH /api/articles/:article_id
-
-POST /api/articles/:article_id/comments
-GET /api/articles/:article_id/comments
-
-GET /api/articles
-
-PATCH /api/comments/:comment_id
-DELETE /api/comments/:comment_id
-
-GET /api
-```
-
----
-
-### Route Requirements
-
-_**All of your endpoints should send the below responses in an object, with a key name of what it is that being sent. E.g.**_
-
-```json
+`Test`:
 {
-  "topics": [
-    {
-      "description": "Code is love, code is life",
-      "slug": "coding"
-    },
-    {
-      "description": "FOOTIE!",
-      "slug": "football"
-    },
-    {
-      "description": "Hey good looking, what you got cooking?",
-      "slug": "cooking"
-    }
-  ]
+connection: { database: 'nc_news_test' },
+client: 'pg',
+migrations: { directory: './db/migrations' },
+seeds: { directory: './db/seeds' }
 }
-```
 
----
+`Development`:
+{
+connection: { database: 'nc_news' },
+client: 'pg',
+migrations: { directory: './db/migrations' },
+seeds: { directory: './db/seeds' }
+}
 
-```http
-GET /api/topics
-```
+`Production`:
+{ client: "pg", connection: process.env.DATABASE_URL }
 
-#### Responds with
+Non Mac OS users will need to add their username and password within these files.
 
-- an array of topic objects, each of which should have the following properties:
-  - `slug`
-  - `description`
+An optional custom console log command can be introduced within "knexfile.js" to suppress knex warnings related to FSMigrations:
 
----
+       const log = console.log;
+       console.log = (...args) => {
+         if (!/FsMigrations/.test(args[0])) log(...args);
+       };
 
-```http
-GET /api/users/:username
-```
+# Tests
 
-#### Responds with
+The code was developed using Test Driven Development (TDD) and therefore a comprehensive suite of test functions has been included.
 
-- a user object which should have the following properties:
-  - `username`
-  - `avatar_url`
-  - `name`
+Testing has been carried out using the `Jest` package. `Supertest` is also required, to simulate testing of the server.
 
----
+Tests for app functionality are included within `./__tests__/app.test.js`.
 
-```http
-GET /api/articles/:article_id
-```
+Tests for utility functions (such as formatting data) are included within `./__tests__/utils.test.js`.
 
-#### Responds with
+Scripts in the package.json file ensure that the "test" data will be used when tests are being run. Scripts also ensure that the test database is migrated to the latest version before each test, and rolled back after each test.
 
-- an article object, which should have the following properties:
-
-  - `author` which is the `username` from the users table
-  - `title`
-  - `article_id`
-  - `body`
-  - `topic`
-  - `created_at`
-  - `votes`
-  - `comment_count` which is the total count of all the comments with this article_id - you should make use of knex queries in order to achieve this
-
----
-
-```http
-PATCH /api/articles/:article_id
-```
-
-#### Request body accepts
-
-- an object in the form `{ inc_votes: newVote }`
-
-  - `newVote` will indicate how much the `votes` property in the database should be updated by
-
-  e.g.
-
-  `{ inc_votes : 1 }` would increment the current article's vote property by 1
-
-  `{ inc_votes : -100 }` would decrement the current article's vote property by 100
-
-#### Responds with
-
-- the updated article
-
----
-
-```http
-POST /api/articles/:article_id/comments
-```
-
-#### Request body accepts
-
-- an object with the following properties:
-  - `username`
-  - `body`
-
-#### Responds with
-
-- the posted comment
-
----
-
-```http
-GET /api/articles/:article_id/comments
-```
-
-#### Responds with
-
-- an array of comments for the given `article_id` of which each comment should have the following properties:
-  - `comment_id`
-  - `votes`
-  - `created_at`
-  - `author` which is the `username` from the users table
-  - `body`
-
-#### Accepts queries
-
-- `sort_by`, which sorts the comments by any valid column (defaults to created_at)
-- `order`, which can be set to `asc` or `desc` for ascending or descending (defaults to descending)
-
----
-
-```http
-GET /api/articles
-```
-
-#### Responds with
-
-- an `articles` array of article objects, each of which should have the following properties:
-  - `author` which is the `username` from the users table
-  - `title`
-  - `article_id`
-  - `topic`
-  - `created_at`
-  - `votes`
-  - `comment_count` which is the total count of all the comments with this article_id - you should make use of knex queries in order to achieve this
-
-#### Should accept queries
-
-- `sort_by`, which sorts the articles by any valid column (defaults to date)
-- `order`, which can be set to `asc` or `desc` for ascending or descending (defaults to descending)
-- `author`, which filters the articles by the username value specified in the query
-- `topic`, which filters the articles by the topic value specified in the query
-
----
-
-```http
-PATCH /api/comments/:comment_id
-```
-
-#### Request body accepts
-
-- an object in the form `{ inc_votes: newVote }`
-
-  - `newVote` will indicate how much the `votes` property in the database should be updated by
-
-  e.g.
-
-  `{ inc_votes : 1 }` would increment the current comments's vote property by 1
-
-  `{ inc_votes : -1 }` would decrement the current comments's vote property by 1
-
-#### Responds with
-
-- the updated comment
-
----
-
-```http
-DELETE /api/comments/:comment_id
-```
-
-#### Should
-
-- delete the given comment by `comment_id`
-
-#### Responds with
-
-- status 204 and no content
-
----
-
-# STOP!
-
-If you have reached this point, go back and review all of the routes that you have created. Consider whether there are any errors that could occur that you haven't yet accounted for. If you identify any, write a test, and then handle the error. Even if you can't think of a specific error for a route, every controller that invokes a promise-based model should contain a `.catch` block to prevent unhandled promise rejections.
-
-As soon as you think that you have handled all the possible errors that you can think of, let someone on the teaching team know. One of us will be able to take a look at your code and give you some feedback. While we are looking at your code, you can continue with the following:
-
-# Continue...
-
----
-
-```http
-GET /api
-```
-
-#### Responds with
-
-- JSON describing all the available endpoints on your API
-
----
-
-### Step 3 - Hosting
-
-Make sure your application and your database is hosted using Heroku
-
-See the hosting.md file in this repo for more guidance
-
-### Step 4 - README
-
-Write a README for your project. Check out this [guide](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2) for what sort of things should be included.
-
-It should also include the link to where your Heroku app is hosted.
-
-Take a look at GitHub's guide for [mastering markdown](https://guides.github.com/features/mastering-markdown/) for making it look pretty!
-
-### Optional Extras
+# Possible further development
 
 #### Pagination
 
@@ -400,4 +182,184 @@ POST /api/topics
 
 POST /api/users
 GET /api/users
+```
+
+# Instructions for hosting (for future reference):
+
+# Hosting a PSQL DB using Heroku
+
+There are many ways to host applications like the one you have created. One of these solutions is Heroku. Heroku provides a service that you can push your code to and it will build, run and host it. Heroku also allows for easy database integration. Their [documentation](https://devcenter.heroku.com/articles/getting-started-with-nodejs) is excellent, so take a look at that. This document is essentially a more condensed, specific version of the steps described in the Heroku docs.
+
+## 1. Install the Heroku CLI
+
+On macOS:
+
+```bash
+brew tap heroku/brew && brew install heroku
+```
+
+...or Ubuntu:
+
+```bash
+sudo snap install --classic heroku
+```
+
+## 2. Create a Heroku App
+
+Log into Heroku using their command line interface:
+
+```bash
+heroku login
+```
+
+Create an app in an active git directory. Doing this in the folder where your server exists is a good start, as this is what you will be hosting.
+
+```bash
+heroku create your-app-name
+```
+
+Here `your-app-name` should be the name you want to give your application. If you don't specify an app name, you'll get a random one which can sometimes be a bit iffy.
+
+This command will both create an app on Heroku for your account. It will also add a new `remote` to your git repository.
+Check this by looking at your git remotes:
+
+```bash
+git remote -v
+```
+
+## 3. Push Your code up to Heroku
+
+```bash
+git push heroku master
+```
+
+## 4. Creating a Hosted Database
+
+Go to the heroku site and log in.
+
+- Select your application
+- `Configure Add-ons`
+- Choose `Heroku Postgres`
+
+The free tier will be adequate for our purposes. This will provide you with a `postgreSQL` pre-created database!
+
+Check that the database exists. Click `settings` on it, and view the credentials. Keep an eye on the URI. Don't close this yet!
+
+## 5. Seeding the Production Database
+
+Check that your database's url is added to the environment variables on Heroku:
+
+```bash
+heroku config:get DATABASE_URL
+```
+
+If you are in your app's directory, and the database is correctly linked as an add on to Heroku, it should display a DB URI string that is exactly the same as the one in your credentials.
+
+At the top of your `knexfile.js`, add the following line of code:
+
+```js
+const { DB_URL } = process.env;
+```
+
+Next, add a `production` key to the `customConfigs` object in your `knexfile.js`. Add in the `DB_URL` as `connectionString` into the connection object with an additional `ssl.rejectUnauthorized` property set to false:
+
+```js
+const { DB_URL } = process.env;
+// ...
+const customConfigs = {
+  // ...
+  production: {
+    connection: {
+      connectionString: DB_URL,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    },
+  },
+};
+// ...
+```
+
+It is critical to set the `ssl.rejectUnauthorized` property to `false`, otherwise we will not be able to connect to the hosted database from your local machine.
+
+In your `./db/data/index.js` add a key of production with a value of your development data in your data object. Something like:
+
+```js
+const data = { test, development, production: development };
+```
+
+This is will ensure your production DB will get seeded with the development data.
+
+In your `package.json`, add the following keys to the scripts:
+
+```json
+{
+  "scripts": {
+    "seed:prod": "NODE_ENV=production DB_URL=$(heroku config:get DATABASE_URL) knex seed:run",
+    "migrate-latest:prod": "NODE_ENV=production DB_URL=$(heroku config:get DATABASE_URL) knex migrate:latest",
+    "migrate-rollback:prod": "NODE_ENV=production DB_URL=$(heroku config:get DATABASE_URL) knex migrate:rollback"
+  }
+}
+```
+
+Each of these will establish an environment variable called `DB_URL`, and set it to whatever heroku provides as your DB URL. It is essential that you do this as the DB URL may change! This deals with a lack of predictability on heroku's end.
+
+Make sure to **run the seed prod script** from your `package.json`:
+
+```bash
+npm run seed:prod
+```
+
+## 6. Connect To The Hosted Database when on Heroku
+
+Change your connection file to look something like this:
+
+```js
+const ENV = process.env.NODE_ENV || "development";
+const knex = require("knex");
+
+const dbConfig =
+  ENV === "production"
+    ? { client: "pg", connection: process.env.DATABASE_URL }
+    : require("../knexfile");
+
+module.exports = knex(dbConfig);
+```
+
+It should check whether you're in production, and if you are, it should connect to the production database. Otherwise it will connect to the (`.gitignore`'d) knex file.
+
+## 7. Use Heroku's PORT
+
+In `listen.js`, make sure you take the PORT off the environment object if it's provided, like so:
+
+```js
+const { PORT = 9090 } = process.env;
+
+app.listen(PORT, () => console.log(`Listening on ${PORT}...`));
+```
+
+## 8. Add a start script
+
+Make sure your package.json has this as a start script:
+
+```json
+"start": "node listen.js",
+```
+
+Commit your changes, and push to heroku master.
+
+```bash
+git push heroku master
+```
+
+## 9. Review Your App
+
+```bash
+heroku open
+```
+
+Any issues should be debugged with:
+
+```bash
+heroku logs --tail
 ```

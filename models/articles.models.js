@@ -7,8 +7,8 @@ const { checkUserExists } = require("./users.models");
 exports.fetchArticles = ({
   sort_by = "created_at",
   order = "desc",
-  author = "all",
-  topic = "all",
+  author,
+  topic,
 }) => {
   const sortByString = `articles.${sort_by}`;
 
@@ -19,37 +19,38 @@ exports.fetchArticles = ({
     });
   }
 
-  const query = knex
-    .select(
-      "articles.author",
-      "articles.title",
-      "articles.article_id",
-      "articles.topic",
-      "articles.created_at",
-      "articles.votes"
-    )
-    .from("articles")
-    .join("comments", "articles.article_id", "comments.article_id")
-    .groupBy("articles.article_id")
-    .count("comments.comment_id", { as: "comment_count" })
-    .orderBy(sortByString, order);
-
-  return checkTopicExists(topic).then((topicExists) => {
-    if (topic != "all") query.where("articles.topic", topic);
-    return checkUserExists(author).then((userExists) => {
-      if (author != "all") query.where("articles.author", author);
-      return query.then((articles) => {
-        articles.forEach((article) => {
-          article.comment_count = parseInt(article.comment_count);
+  return Promise.all([checkTopicExists(topic), checkUserExists(author)]).then(
+    () => {
+      return knex
+        .select(
+          "articles.author",
+          "articles.title",
+          "articles.article_id",
+          "articles.topic",
+          "articles.created_at",
+          "articles.votes"
+        )
+        .from("articles")
+        .leftJoin("comments", "articles.article_id", "comments.article_id")
+        .groupBy("articles.article_id")
+        .count("comments.comment_id", { as: "comment_count" })
+        .modify((query) => {
+          if (topic) query.where("articles.topic", topic);
+          if (author) query.where("articles.author", author);
+        })
+        .orderBy(sortByString, order)
+        .then((articles) => {
+          articles.forEach((article) => {
+            article.comment_count = parseInt(article.comment_count);
+          });
+          return articles;
         });
-        return articles;
-      });
-    });
-  });
+    }
+  );
 };
 
 exports.fetchArticle = ({ article_id }) => {
-  const query = knex
+  return knex
     .select(
       "articles.author",
       "articles.title",
@@ -60,59 +61,52 @@ exports.fetchArticle = ({ article_id }) => {
       "articles.body"
     )
     .from("articles")
-    .join("comments", "articles.article_id", "comments.article_id")
+    .leftJoin("comments", "articles.article_id", "comments.article_id")
     .groupBy("articles.article_id")
     .count("comments.comment_id", { as: "comment_count" })
-    .where("articles.article_id", article_id);
-  return query.then((articleArray) => {
-    if (articleArray.length === 0) {
-      return Promise.reject({
-        status: 404,
-        msg: "article not found!!!",
-      });
-    }
-    articleArray[0].comment_count = parseInt(articleArray[0].comment_count);
-    return articleArray[0];
-  });
+    .where("articles.article_id", article_id)
+    .then((articleArray) => {
+      if (articleArray.length === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: "article not found!!!",
+        });
+      }
+      articleArray[0].comment_count = parseInt(articleArray[0].comment_count);
+      return articleArray[0];
+    });
 };
 
 exports.updateArticle = (params, body) => {
   const { article_id } = params;
   const { inc_votes } = body;
 
-  // Kept the code below in case an extra parameter should cause an error
-  // if (Object.keys(body).length > 1) {
-  //   return Promise.reject({
-  //     status: 400,
-  //     msg: "invalid patch parameter!!!",
-  //   });
-  // }
-
-  const query = knex
+  return knex
     .select("articles.*")
     .from("articles")
     .where("articles.article_id", article_id)
-    .increment({ votes: inc_votes });
-
-  return query.then(() => {
-    return exports.fetchArticle(params);
-    //open to interpretation whether this step is needed!
-  });
+    .increment({ votes: inc_votes })
+    .then(() => {
+      return exports.fetchArticle(params);
+    });
 };
 
 exports.checkArticleExists = (article_id) => {
-  const articleQuery = knex.select().from("articles").returning("*");
-
-  if (article_id != "all") articleQuery.where("article_id", article_id);
-
-  return articleQuery.then((articleRows) => {
-    if (articleRows.length != 0) {
-      return true;
-    } else {
-      return Promise.reject({
-        status: 404,
-        msg: "article not found in db!!!",
-      });
-    }
-  });
+  return knex
+    .select()
+    .from("articles")
+    .modify((query) => {
+      if (article_id) query.where("article_id", article_id);
+    })
+    .returning("*")
+    .then((articleRows) => {
+      if (articleRows.length != 0) {
+        return true;
+      } else {
+        return Promise.reject({
+          status: 404,
+          msg: "article not found in db!!!",
+        });
+      }
+    });
 };

@@ -23,7 +23,14 @@ describe("formatDates", () => {
       },
     ];
     const output = formatDates(input);
-    expect(output[0]).not.toBe(input[0]);
+    expect(output[0]).not.toBe({
+      body:
+        "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+      belongs_to: "They're not exactly dogs, are they?",
+      created_by: "butter_bridge",
+      votes: 16,
+      created_at: 1511354163389,
+    });
   });
   test("Returns a date instance", () => {
     const input = [
@@ -51,10 +58,12 @@ describe("formatDates", () => {
       },
     ];
     const output = formatDates(input);
-    expect(output[0].body).toEqual(input[0].body);
-    expect(output[0].belongs_to).toEqual(input[0].belongs_to);
-    expect(output[0].created_by).toEqual(input[0].created_by);
-    expect(output[0].votes).toEqual(input[0].votes);
+    expect(output[0].body).toBe(
+      "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!"
+    );
+    expect(output[0].belongs_to).toBe("They're not exactly dogs, are they?");
+    expect(output[0].created_by).toBe("butter_bridge");
+    expect(output[0].votes).toBe(16);
   });
   test("Works with multiple entries from different table", () => {
     const input = [
@@ -100,7 +109,7 @@ describe("formatDates", () => {
         created_at: 1163852514171,
       },
     ];
-    const output = formatDates(input);
+    formatDates(input);
     expect(input).toEqual([
       {
         title: "Eight pug gifs that remind me of mitch",
@@ -153,13 +162,6 @@ describe("makeRefObj", () => {
     ]);
   });
 });
-
-/*
-This utility function should be able to take an array (`list`) of objects and return a reference object. The reference object must be keyed by each item's title, with the values being each item's corresponding id. e.g.
-`[{ article_id: 1, title: 'A' }]`
-will become
-`{ A: 1 }`
-*/
 
 describe("formatComments", () => {
   test("Returns a new array", () => {
@@ -275,13 +277,3 @@ describe("formatComments", () => {
     expect(articleRef).toEqual({ A: 1, B: 2 });
   });
 });
-
-/*
-This utility function should be able to take an array of comment objects (`comments`) and a reference object, and return a new array of formatted comments.
-Each formatted comment must have:
-- Its `created_by` property renamed to an `author` key
-- Its `belongs_to` property renamed to an `article_id` key
-- The value of the new `article_id` key must be the id corresponding to the original title value provided
-- Its `created_at` value converted into a javascript date object
-- The rest of the comment's properties must be maintained
-*/

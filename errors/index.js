@@ -2,7 +2,7 @@ exports.handle405s = (req, res, next) => {
   res.status(405).send({ msg: "method not allowed!!!" });
 };
 
-exports.badPathError = (req, res, next) => {
+exports.handle404s = (req, res, next) => {
   res.status(404).send({ msg: "Path not found! :-(" });
 };
 
@@ -10,7 +10,7 @@ exports.handlePSQLErrors = (err, req, res, next) => {
   if (
     err.code === "42703" || //undefined column
     err.code === "23502" || //not null violation
-    err.code === "22P02" // invalid text represetnation
+    err.code === "22P02" // invalid text representation
   ) {
     res.status(400).send({ msg: "bad request to db!!!" });
   } else if (err.code === "23503") {

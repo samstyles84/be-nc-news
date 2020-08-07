@@ -97,13 +97,10 @@ describe("app", () => {
           .get(apiString)
           .expect(200)
           .then(({ body: { user } }) => {
-            //Note the nested destructuring here
             expect(user.username).toBe(testUser.username);
             expect(user.avatar_url).toBe(testUser.avatar_url);
             expect(user.name).toBe(testUser.name);
           });
-
-        //Maybe not a great idea to require in the testData - someone reading the tests doesnt nkow what to expect.
       });
       test("GET: 404 - Username doesn't exist in the database", () => {
         const apiString = `/api/users/samstyles`;
@@ -148,6 +145,14 @@ describe("app", () => {
                 }),
               ])
             );
+          });
+      });
+      test("GET: 200 - responds with an array of all article objects ", () => {
+        return request(app)
+          .get("/api/articles")
+          .expect(200)
+          .then(({ body: { articles } }) => {
+            expect(articles.length).toBe(12);
           });
       });
       test("GET: 200 - array is sorted by date in descending order as default", () => {
@@ -307,11 +312,11 @@ describe("app", () => {
               expect(msg).toBe("article not found!!!");
             });
         });
-        test("PATCH: 201 - update vote count of an article", () => {
+        test("PATCH: 200 - update vote count of an article", () => {
           return request(app)
             .patch("/api/articles/1")
             .send({ inc_votes: 42 })
-            .expect(201)
+            .expect(200)
             .then(({ body: { article } }) => {
               expect(article.comment_count).toBe(13);
               expect(article.article_id).toBe(1);
@@ -339,11 +344,11 @@ describe("app", () => {
               expect(msg).toBe("bad request to db!!!");
             });
         });
-        test("PATCH: 201 - Some other property on request body", () => {
+        test("PATCH: 200 - Some other property on request body", () => {
           return request(app)
             .patch("/api/articles/1")
             .send({ inc_votes: 42, name: "Mitch" })
-            .expect(201)
+            .expect(200)
             .then(({ body: { article } }) => {
               expect(article.comment_count).toBe(13);
               expect(article.article_id).toBe(1);
@@ -353,14 +358,6 @@ describe("app", () => {
               expect(article.author).toBe("butter_bridge");
               expect(article.created_at).toBe("2018-11-15T12:21:54.171Z");
             });
-
-          // return request(app)
-          //   .patch("/api/articles/1")
-          //   .send({ inc_votes: 1, name: "Mitch" })
-          //   .expect(400)
-          //   .then(({ body: { msg } }) => {
-          //     expect(msg).toBe("invalid patch parameter!!!");
-          //   });
         });
         test("PATCH: 404 - Well formed article_id that doesn't exist in the database", () => {
           return request(app)
@@ -541,11 +538,11 @@ describe("app", () => {
       });
     });
     describe("/comments/:comment_id", () => {
-      test("PATCH: 201 - returns an updated comment object", () => {
+      test("PATCH: 200 - returns an updated comment object", () => {
         return request(app)
           .patch("/api/comments/1")
           .send({ inc_votes: 42 })
-          .expect(201)
+          .expect(200)
           .then(({ body: { comment } }) => {
             expect(comment.comment_id).toBe(1);
             expect(comment.votes).toBe(58);
@@ -597,6 +594,19 @@ describe("app", () => {
           .expect(404)
           .then(({ body: { msg } }) => {
             expect(msg).toBe("non-existant comment id!!!");
+          });
+      });
+      test("DELETE: 204 - Deletes a comment from the database", () => {
+        return request(app)
+          .delete("/api/comments/2") //This is a comment on article 1
+          .expect(204)
+          .then(() => {
+            return request(app).get("/api/articles/1/comments");
+          })
+          .then(({ body: { comments } }) => {
+            expect(comments.every((comment) => comment.comment_id !== 2)).toBe(
+              true
+            );
           });
       });
       test("DELETE: 204 - Deletes a comment from the database", () => {

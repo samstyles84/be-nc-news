@@ -79,7 +79,7 @@ exports.fetchArticle = ({ article_id }) => {
 
 exports.updateArticle = (params, body) => {
   const { article_id } = params;
-  const { inc_votes } = body;
+  const { inc_votes = 0 } = body;
 
   return knex
     .select("articles.*")

@@ -327,12 +327,18 @@ describe("app", () => {
               expect(article.created_at).toBe("2018-11-15T12:21:54.171Z");
             });
         });
-        test("PATCH: 400 - No `inc_votes` on request body", () => {
+        test("PATCH: 200 - No `inc_votes` on request body", () => {
           return request(app)
             .patch("/api/articles/1")
-            .expect(400)
-            .then(({ body: { msg } }) => {
-              expect(msg).toBe("bad request to db!!!");
+            .expect(200)
+            .then(({ body: { article } }) => {
+              expect(article.comment_count).toBe(13);
+              expect(article.article_id).toBe(1);
+              expect(article.title).toBe("Living in the shadow of a great man");
+              expect(article.votes).toBe(100);
+              expect(article.topic).toBe("mitch");
+              expect(article.author).toBe("butter_bridge");
+              expect(article.created_at).toBe("2018-11-15T12:21:54.171Z");
             });
         });
         test("PATCH: 400 - Invalid `inc_votes", () => {
@@ -416,6 +422,27 @@ describe("app", () => {
               .then(({ body: { msg } }) => {
                 expect(msg).toBe("bad request to db!!!");
               });
+          });
+          test("POST: 400 - Bad Request status code when `POST` request does not include all the required keys", () => {
+            return request(app)
+              .post("/api/articles/1/comments")
+              .send({
+                username: "butter_bridge",
+                body: "testing the POST endpoint",
+              })
+              .expect(201)
+              .then(
+                ({
+                  body: {
+                    comment: { author, body, article_id, votes, created_at },
+                  },
+                }) => {
+                  expect(author).toBe("butter_bridge");
+                  expect(article_id).toBe(1);
+                  expect(votes).toBe(0);
+                  expect(typeof created_at).toBe("string");
+                }
+              );
           });
           test("POST: 404 - Well formed article_id that doesn't exist in the database", () => {
             return request(app)
@@ -504,6 +531,15 @@ describe("app", () => {
                 );
               });
           });
+          test("GET: 200 - returns empty array for an article with no comments", () => {
+            return request(app)
+              .get("/api/articles/2/comments")
+              .expect(200)
+              .then(({ body: { comments } }) => {
+                expect(comments.length).toBe(0);
+              });
+          });
+
           test("GET: 400 - bad article_id", () => {
             return request(app)
               .get("/api/articles/dog/comments")
@@ -555,9 +591,14 @@ describe("app", () => {
       test("PATCH: 400 - No `inc_votes` on request body", () => {
         return request(app)
           .patch("/api/comments/1")
-          .expect(400)
-          .then(({ body: { msg } }) => {
-            expect(msg).toBe("bad request to db!!!");
+          .expect(200)
+          .then(({ body: { comment } }) => {
+            expect(comment.comment_id).toBe(1);
+            expect(comment.votes).toBe(16);
+            expect(comment.author).toBe("butter_bridge");
+            expect(comment.body).toBe(
+              "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!"
+            );
           });
       });
       test("PATCH: 400 - Invalid `inc_votes", () => {

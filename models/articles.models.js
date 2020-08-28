@@ -10,8 +10,6 @@ exports.fetchArticles = (
   author,
   topic
 ) => {
-  const sortByString = `articles.${sort_by}`;
-
   if (order != "asc" && order != "desc") {
     return Promise.reject({
       status: 400,
@@ -38,7 +36,7 @@ exports.fetchArticles = (
           if (topic) query.where("articles.topic", topic);
           if (author) query.where("articles.author", author);
         })
-        .orderBy(sortByString, order)
+        .orderBy(sort_by, order)
         .then((articles) => {
           articles.forEach((article) => {
             article.comment_count = parseInt(article.comment_count);

@@ -179,12 +179,22 @@ describe("app", () => {
             expect(articles[0].created_at).toBe("2018-11-15T12:21:54.171Z");
           });
       });
-      test("GET: 200 - array can be sorted by other columns and in ascending order", () => {
+      test("GET: 200 - array can be sorted by votes and in ascending order", () => {
         return request(app)
           .get("/api/articles?sort_by=votes&order=asc")
           .expect(200)
           .then(({ body: { articles } }) => {
             expect(articles).toBeSortedBy("votes", { descending: false });
+          });
+      });
+      test("GET: 200 - array can be sorted by comment_count and in ascending order", () => {
+        return request(app)
+          .get("/api/articles?sort_by=comment_count&order=asc")
+          .expect(200)
+          .then(({ body: { articles } }) => {
+            expect(articles).toBeSortedBy("comment_count", {
+              descending: false,
+            });
           });
       });
       test("GET: 200 - endpoint can be queried by author", () => {
